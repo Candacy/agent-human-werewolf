@@ -174,7 +174,7 @@ async function speakQueue(){
       if (!_loc && VOICE_STREAM){
         try {
           sp = await Rec.speak('/ws/tts?text=' + encodeURIComponent(txt)
-                               + (voice ? ('&voice=' + encodeURIComponent(voice)) : ''));
+                               + (voice ? ('&voice=' + encodeURIComponent(voice)) : ''), {onAnalyser:function(a){ PORTRAIT_ANALYSER = a; }});
           SPEAK_STREAM = sp;
           await sp.promise;
           SPEAK_STREAM = null;
@@ -271,7 +271,7 @@ function nightStageIdx(need){
   var role = need && need.role;
   if (!role) return -1;
   var tl = (PUBLIC && PUBLIC.timeline) || [];
-  for (var j = 0; j < tl.length; j++){
+  for (var j = tl.length - 1; j >= 0; j--){
     if (tl[j].stage === role) return j;
   }
   return -1;
@@ -281,7 +281,7 @@ function nightStageIdx(need){
 function nightNodeIdx(nid){
   if (!nid) return -1;
   var tl = (PUBLIC && PUBLIC.timeline) || [];
-  for (var j = 0; j < tl.length; j++){
+  for (var j = tl.length - 1; j >= 0; j--){
     if (tl[j].node === nid) return j;
   }
   return -1;
@@ -329,3 +329,9 @@ function nightReady(need){
   if (j < 0) return voicedUp();       /* 老局没有 stage 标 ⇒ 整队门兜底 */
   return SPOKEN > j;
 }
+
+function playedCount(){
+  if (!VOICE_ON || PAUSED) return (PUBLIC && PUBLIC.timeline || []).length;
+  return SPOKE_DONE ? Math.max(0, SPOKE_DONE.idx + (SPOKE_DONE.at > 0 ? 1 : 0)) : 0;
+}
+function audioCaughtUp(){ return !VOICE_ON || PAUSED || (!SPEAKING && playedCount() >= (PUBLIC && PUBLIC.timeline || []).length); }
